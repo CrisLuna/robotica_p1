@@ -1,0 +1,50 @@
+#include <práctica_1.h>
+
+unsigned long pulsosSegundo;
+int1 baseTiempoF = FALSE;
+
+#INT_TIMER0
+void baseTiempoISR(void){
+   set_timer0(3036);
+   
+   pulsosSegundo = get_timer1();
+      set_timer1(0);
+      
+   output_toggle(PIN_D7);    //**** Depuración base de tiempo
+   baseTiempoF = TRUE;
+}
+
+void main()
+{
+unsigned long magAdc;
+float motorRPM = 0;
+
+   set_tris_a(0b11111111);
+      setup_adc(ADC_CLOCK_DIV_16 | ADC_TAD_MUL_4);
+      setup_adc_ports(AN0);
+         set_adc_channel(0);
+   
+   set_tris_d(0b00000000);
+
+   setup_timer_0(T0_INTERNAL | T0_DIV_64);
+      enable_interrupts(INT_TIMER0 | GLOBAL);
+      set_timer0(3036);
+      
+   setup_timer_1(T1_EXTERNAL | T1_DIV_BY_1);
+      set_timer1(0);
+
+   while(TRUE)
+   {
+      magAdc = read_adc();
+      set_pwm1_duty(magAdc);
+
+      if(baseTiempoF){
+         motorRPM = (pulsosSegundo * 60.0) / 16;
+         
+         cout << "Revoluciones = " << motorRPM << endl;
+      }
+      
+      delay_ms(250);
+   }
+
+}
